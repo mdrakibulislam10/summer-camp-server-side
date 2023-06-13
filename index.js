@@ -31,12 +31,22 @@ async function run() {
         // users related api
         app.post("/users", async (req, res) => {
             const user = req.body;
-            const email = user.email;
+            const email = user?.email;
             const query = { email: email };
             const exists = await usersCollection.findOne(query);
             if (!exists) {
                 const result = await usersCollection.insertOne(user);
                 res.send(result);
+            }
+        });
+
+        app.get("/userRole", async (req, res) => {
+            const email = req.query?.email;
+            if (email) {
+                const query = { email: email };
+                const user = await usersCollection.findOne(query);
+                const userRole = user?.role;
+                res.send(userRole);
             }
         });
 
