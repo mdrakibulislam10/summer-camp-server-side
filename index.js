@@ -138,6 +138,15 @@ async function run() {
             }
         });
 
+        app.get("/selectedClasses", async (req, res) => {
+            const email = req.query.email;
+            if (email) {
+                const query = { email: email };
+                const result = await selectedClassesCollection.find(query).toArray();
+                res.send(result);
+            }
+        });
+
         app.get("/classes/approved", async (req, res) => {
             const query = { status: { $eq: "approved" } };
             const result = await classesCollection.find(query).toArray();
