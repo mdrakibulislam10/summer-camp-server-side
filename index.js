@@ -125,7 +125,11 @@ async function run() {
             }
         });
 
-
+        app.get("/classes/approved", async (req, res) => {
+            const query = { status: { $eq: "approved" } };
+            const result = await classesCollection.find(query).toArray();
+            res.send(result)
+        });
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
