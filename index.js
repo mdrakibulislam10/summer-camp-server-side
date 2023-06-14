@@ -28,6 +28,7 @@ async function run() {
 
         const usersCollection = client.db("summerCamp").collection("users");
         const classesCollection = client.db("summerCamp").collection("classes");
+        const selectedClassesCollection = client.db("summerCamp").collection("selectedClasses");
 
         // users related api
         app.post("/users", async (req, res) => {
@@ -121,6 +122,18 @@ async function run() {
                 };
 
                 const result = await classesCollection.updateOne(filter, updateDoc);
+                res.send(result);
+            }
+        });
+
+        // selected classes api
+        app.post("/selectedClasses", async (req, res) => {
+            const selectedClass = req.body;
+            const query = { classId: selectedClass.classId };
+            const exists = await selectedClassesCollection.findOne(query);
+
+            if (!exists) {
+                const result = await selectedClassesCollection.insertOne(selectedClass);
                 res.send(result);
             }
         });
