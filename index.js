@@ -126,11 +126,19 @@ async function run() {
             }
         });
 
+        app.get("/classes/approved", async (req, res) => {
+            const query = { status: { $eq: "approved" } };
+            const result = await classesCollection.find(query).toArray();
+            res.send(result)
+        });
+
         // selected classes api
         app.post("/selectedClasses", async (req, res) => {
             const selectedClass = req.body;
-            const query = { classId: selectedClass.classId };
-            const exists = await selectedClassesCollection.findOne(query);
+            const email = selectedClass.email;
+            const query = { email: email };
+            const selected = await selectedClassesCollection.find(query).toArray();
+            const exists = selected.find(item => item.classId === selectedClass.classId);
 
             if (!exists) {
                 const result = await selectedClassesCollection.insertOne(selectedClass);
@@ -147,11 +155,18 @@ async function run() {
             }
         });
 
-        app.get("/classes/approved", async (req, res) => {
-            const query = { status: { $eq: "approved" } };
-            const result = await classesCollection.find(query).toArray();
-            res.send(result)
+        app.delete("/selectedClass/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            if (id) {
+                const result = await selectedClassesCollection.deleteOne(query);
+                res.send(result);
+            }
         });
+
+
+
+
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
