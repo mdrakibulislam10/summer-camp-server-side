@@ -27,6 +27,7 @@ async function run() {
         client.connect();
 
         const usersCollection = client.db("summerCamp").collection("users");
+        const classesCollection = client.db("summerCamp").collection("classes");
 
         // users related api
         app.post("/users", async (req, res) => {
@@ -69,6 +70,13 @@ async function run() {
                 const result = await usersCollection.updateOne(filter, updateDoc);
                 res.send(result);
             }
+        });
+
+        // classes related api
+        app.post("/classes", async (req, res) => {
+            const martialClass = req.body;
+            const result = await classesCollection.insertOne(martialClass);
+            res.send(result);
         });
 
         // Send a ping to confirm a successful connection
