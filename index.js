@@ -50,6 +50,7 @@ async function run() {
         const usersCollection = client.db("summerCamp").collection("users");
         const classesCollection = client.db("summerCamp").collection("classes");
         const selectedClassesCollection = client.db("summerCamp").collection("selectedClasses");
+        const paymentClassesCollection = client.db("summerCamp").collection("paymentClasses");
 
         // jwt token send to client side
         app.post("/jwt", (req, res) => {
@@ -206,6 +207,42 @@ async function run() {
             res.send({
                 clientSecret: paymentIntent.client_secret,
             });
+        });
+
+        app.post("/paymentsClass", verifyJwt, async (req, res) => {
+            const paymentClass = req.body;
+            const result = await paymentClassesCollection.insertOne(paymentClass);
+            res.send(result);
+        });
+
+        app.patch("/class/seats/:classId", verifyJwt, async (req, res) => {
+            const classId = req.params.classId;
+            const newSeatsObj = req.body;
+            const filter = { _id: new ObjectId(classId) };
+
+            const updateDoc = {
+                $set: {
+                    availableSeats: newSeatsObj.newSeats,
+                },
+            };
+
+            const result = await classesCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
+        app.patch("/class/selected/seats/:classId", verifyJwt, async (req, res) => {
+            const classId = req.params.classId;
+            const newSeatsObj = req.body;
+            const filter = { classId: classId };
+
+            const updateDoc = {
+                $set: {
+                    availableSeats: newSeatsObj.newSeats,
+                },
+            };
+
+            const result = await selectedClassesCollection.updateMany(filter, updateDoc);
+            res.send(result);
         });
 
         // Send a ping to confirm a successful connection
