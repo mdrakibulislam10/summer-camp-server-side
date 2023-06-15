@@ -211,6 +211,7 @@ async function run() {
 
         app.post("/paymentsClass", verifyJwt, async (req, res) => {
             const paymentClass = req.body;
+
             const result = await paymentClassesCollection.insertOne(paymentClass);
             res.send(result);
         });
@@ -242,6 +243,13 @@ async function run() {
             };
 
             const result = await selectedClassesCollection.updateMany(filter, updateDoc);
+            res.send(result);
+        });
+
+        app.delete("/class/selected/remove/:id", verifyJwt, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await selectedClassesCollection.deleteOne(query);
             res.send(result);
         });
 
