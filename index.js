@@ -285,6 +285,27 @@ async function run() {
             }
         });
 
+        // popular classes load
+        app.get("/popularClasses", async (req, res) => {
+            const limit = parseInt(req.query.limit);
+            const result = await classesCollection.find().sort({ enrolled: -1 }).limit(limit).toArray();
+            res.send(result);
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
