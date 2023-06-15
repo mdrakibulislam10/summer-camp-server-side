@@ -292,6 +292,14 @@ async function run() {
             res.send(result);
         });
 
+        // popular instructors load
+        app.get("/popularInstructor", async (req, res) => {
+            const limit = parseInt(req.query.limit);
+            const query = { role: "instructor" };
+            const result = await usersCollection.find(query).limit(limit).toArray();
+            res.send(result);
+        });
+
 
 
 
