@@ -253,6 +253,19 @@ async function run() {
             res.send(result);
         });
 
+        app.patch("/class/selected/enrolled/:classId", verifyJwt, async (req, res) => {
+            const classId = req.params.classId;
+            const newEnrolledObj = req.body;
+            const filter = { _id: new ObjectId(classId) };
+            const updateDoc = {
+                $set: {
+                    enrolled: newEnrolledObj.newEnrolled,
+                },
+            };
+            const result = await classesCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
