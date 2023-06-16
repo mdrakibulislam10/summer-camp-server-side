@@ -60,6 +60,34 @@ async function run() {
             res.send({ token });
         });
 
+        // verify admin
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            // console.log(user);
+            // console.log(req.decoded);
+
+            if (user?.role !== "admin") {
+                return res.status(403).send({ error: true, message: "Unauthorized Request" }); // forbidden;
+            }
+
+            next();
+        };
+
+        // verify instructor
+        const verifyInstructor = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+
+            if (user?.role !== "instructor") {
+                return res.status(403).send({ error: true, message: "Unauthorized Request" });
+            }
+
+            next();
+        };
+
         // users related api
         app.post("/users", async (req, res) => {
             const user = req.body;
@@ -74,20 +102,18 @@ async function run() {
 
         app.get("/userRole", async (req, res) => {
             const email = req.query?.email;
-            if (email) {
-                const query = { email: email };
-                const user = await usersCollection.findOne(query);
-                const userRole = user?.role;
-                res.send(userRole);
-            }
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            const userRole = user?.role;
+            res.send(userRole);
         });
 
-        app.get("/users", async (req, res) => {
+        app.get("/users", verifyJwt, verifyAdmin, async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
         });
 
-        app.patch("/users/:id", async (req, res) => {
+        app.patch("/users/:id", verifyJwt, verifyAdmin, async (req, res) => {
             const id = req.params?.id;
             const userRoleObj = req.body;
             const filter = { _id: new ObjectId(id) };
@@ -104,27 +130,31 @@ async function run() {
         });
 
         // classes related api
-        app.post("/classes", async (req, res) => {
+        app.post("/classes", verifyJwt, verifyInstructor, async (req, res) => {
             const martialClass = req.body;
             const result = await classesCollection.insertOne(martialClass);
             res.send(result);
         });
 
-        app.get("/classes", async (req, res) => {
+        app.get("/classes", verifyJwt, verifyInstructor, async (req, res) => {
             const email = req.query.email;
             if (email) {
+                if (req.decoded.email !== email) {
+                    return res.send({ instructor: false });
+                };
+
                 const query = { email: email };
                 const result = await classesCollection.find(query).toArray();
                 res.send(result);
             }
         });
 
-        app.get("/allClasses", async (req, res) => {
+        app.get("/allClasses", verifyJwt, verifyAdmin, async (req, res) => {
             const result = await classesCollection.find().toArray();
             res.send(result);
         });
 
-        app.patch("/classes/:id", async (req, res) => {
+        app.patch("/classes/:id", verifyJwt, verifyAdmin, async (req, res) => {
             const id = req.params?.id;
             const setStatusObj = req.body;
             const filter = { _id: new ObjectId(id) };
@@ -140,7 +170,7 @@ async function run() {
             }
         });
 
-        app.patch("/classes/feedback/:id", async (req, res) => {
+        app.patch("/classes/feedback/:id", verifyJwt, verifyAdmin, async (req, res) => {
             const id = req.params?.id;
             const feedbackTextObj = req.body;
             const filter = { _id: new ObjectId(id) };
@@ -163,7 +193,7 @@ async function run() {
         });
 
         // selected classes api
-        app.post("/selectedClasses", async (req, res) => {
+        app.post("/selectedClasses", verifyJwt, async (req, res) => {
             const selectedClass = req.body;
             const email = selectedClass.email;
             const query = { email: email };
@@ -176,16 +206,20 @@ async function run() {
             }
         });
 
-        app.get("/selectedClasses", async (req, res) => {
+        app.get("/selectedClasses", verifyJwt, async (req, res) => {
             const email = req.query.email;
             if (email) {
+                if (req.decoded.email !== email) {
+                    return res.send({ student: false });
+                };
+
                 const query = { email: email };
                 const result = await selectedClassesCollection.find(query).toArray();
                 res.send(result);
             }
         });
 
-        app.delete("/selectedClass/:id", async (req, res) => {
+        app.delete("/selectedClass/:id", verifyJwt, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             if (id) {
@@ -270,6 +304,10 @@ async function run() {
         app.get("/enrolledClasses", verifyJwt, async (req, res) => {
             const email = req.query.email;
             if (email) {
+                if (req.decoded.email !== email) {
+                    return res.send({ student: false });
+                };
+
                 const query = { email: email };
                 const result = await paymentClassesCollection.find(query).toArray();
                 res.send(result);
@@ -279,6 +317,10 @@ async function run() {
         app.get("/paymentHistory", verifyJwt, async (req, res) => {
             const email = req.query.email;
             if (email) {
+                if (req.decoded.email !== email) {
+                    return res.send({ student: false });
+                };
+
                 const query = { email: email };
                 const result = await paymentClassesCollection.find(query).sort({ date: -1 }).toArray();
                 res.send(result);
@@ -292,7 +334,7 @@ async function run() {
             res.send(result);
         });
 
-        // instructors related api
+        // popular instructors load
         app.get("/popularInstructor", async (req, res) => {
             const limit = parseInt(req.query.limit);
             const query = { role: "instructor" };
@@ -300,17 +342,11 @@ async function run() {
             res.send(result);
         });
 
-        app.get("/instructor", async (req, res) => {
+        app.get("/instructors", async (req, res) => {
             const query = { role: "instructor" };
             const result = await usersCollection.find(query).toArray();
             res.send(result);
         });
-
-
-
-
-
-
 
 
 
