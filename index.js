@@ -51,6 +51,7 @@ async function run() {
         const classesCollection = client.db("summerCamp").collection("classes");
         const selectedClassesCollection = client.db("summerCamp").collection("selectedClasses");
         const paymentClassesCollection = client.db("summerCamp").collection("paymentClasses");
+        const reviewsCollection = client.db("summerCamp").collection("reviews");
 
         // jwt token send to client side
         app.post("/jwt", (req, res) => {
@@ -348,8 +349,17 @@ async function run() {
             res.send(result);
         });
 
+        // review related api
+        app.post("/reviews", verifyJwt, async (req, res) => {
+            const reviewerInfo = req.body;
+            const result = await reviewsCollection.insertOne(reviewerInfo);
+            res.send(result);
+        });
 
-
+        app.get("/reviews", async (req, res) => {
+            const result = await reviewsCollection.find().toArray();
+            res.send(result);
+        });
 
 
 
